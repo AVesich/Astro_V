@@ -26,9 +26,11 @@ namespace mh8_Drive {
 
       // Sensor-based driving
       void driveToObject(float maxPower, float curveTime, double sensitivity);
+      void autoPark();
 
       // Normal inch-based funcs
-      void driveStraight(double inches, double maxRpm, char dir);
+      void driveStraight(double inches, double maxPct, char dir);
+      void o_driveStraight(double inches, double maxRpm, char dir);
       void Turn(double deg, int maxSp, char dir);
       void inertialTurn(double angle, int maxTurnSp);
       void Arc(double lInches, double rInches, double lSpeed, double rSpeed, char dir);
@@ -37,6 +39,7 @@ namespace mh8_Drive {
       void initGps(double xOffset, double yOffset, double rotation);
 
       void driveToCoord(double x, double y, double angle, double maxTurnSp, bool reversed);
+      void turnWithGPSCoords(double coordsTo[2], double angle, double maxTurnSp, bool reversed);
       void turnWithGPS(double angle, double maxTurnSp);
       //double angleBetween(double delX, double delY);
 
