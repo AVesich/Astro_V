@@ -35,6 +35,8 @@ using namespace vex;
 // A global instance of competition
 competition Competition;
 
+message_link astro_Link = message_link(20, "astro_Link", linkType::manager);
+
 // define your global instances of motors and other devices here
 
 /*---------------------------------------------------------------------------*/

@@ -6,6 +6,8 @@ bool driveReversed = false;
 double x;
 double y;
 
+bool tryingToPark = false;
+
 void revDrive() { driveReversed = !driveReversed; }
 
 void driveOp() {
@@ -34,7 +36,13 @@ void driveOp() {
     m_driveTrain.mh8_setBrake('b'); // Set brake mode to brake
   }*/
 
-  m_driveTrain.setBrake('c');
+  if (!tryingToPark && mh8Imu.roll() < -20)
+    tryingToPark = true;
+
+  if (tryingToPark)
+    m_driveTrain.setBrake('h');
+  else
+    m_driveTrain.setBrake('c');
 
   // Make the drivetrain move
   m_driveTrain.arcadeDrive(x, y);

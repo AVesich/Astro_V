@@ -42,8 +42,114 @@ void mh8_Drivetrain::arcadeDrive(int xInput, int yInput) {
 // Sensor-based driving
 void mh8_Drivetrain::driveToObject(float maxPower, float curveTime, double sensitivity) {}
 
+void mh8_Drivetrain::autoPark() {
+  m_driveTrain.setBrake('h');
+  resetDrive();
+
+  while (mh8Imu.roll() > -20) {
+    driveLeft(100);
+    driveRight(100);
+  }
+  
+  driveStraight(31, 400, 'f');
+
+  wait(750, msec); // Wait for the platform to balance
+
+  /*while (mh8Imu.roll() < -18) { // If the robot undershoots
+    driveStraight(1, 500, 'f');
+    wait(1000, msec); // Wait for the platform to balance
+  }*/
+
+  if (mh8Imu.roll() > 3) { // If the robot overshot
+    driveStraight(3, 500, 'b');
+  }
+  
+  resetDrive();
+}
+
+void mh8_Drivetrain::driveStraight(double inches, double maxPct, char dir) {
+  // Reset the drive and make the brake mode "brake"
+  setBrake('b');
+  resetDrive();
+
+  // Initialize variables
+  const int wheelDiam = WHEEL_SIZE; // Diameter of the robot wheels in inches
+  const int target = (inches / (wheelDiam * M_PI)) * 360 * 0.61; // Target distance converted from inches to encoder ticks; double after 360 is a constant tuned for the robot
+  int lAvgTicks = 0; // Left average encoder ticks, needed for alignment
+  int rAvgTicks = 0; // Right average encoder ticks, needed for alignment
+  int avgTicks = 0; // Overall average encoder ticks
+  float currentPower = 0; // Current power to be supplied to the motors
+  float lPower = 0; // Left power for the left drive side, needed b/c of alignment
+  float rPower = 0; // Right power for the rigth drive side, needed b/c of alignment
+  float alignErr = 0; // Alignment error calculated to align each side of the robot
+
+  // PID constants
+  const double kP = 0.17; // Distance from target * kP
+  const double kI = 0.0011; // Not really necessary, but implemented in case its needed // Total accumulative distance from target * kI
+  const double kD = 0.85; // Difference between current distance from target and previous distance from target * kD
+  const double kA = 0.07; // Alignment constant
+  double error = 0.0; // Distance from target in current iteration
+  double prevError = 0.0; // Distance from target from previous iteration
+  double accumulativeError = 0.0; // Total of every calculated error combined
+
+  while(avgTicks < target)
+  {
+    // PID moment
+    currentPower = error*kP + accumulativeError*kI + (error-prevError)*kD;
+
+    // Limit the current power to the allowed maximum
+    if (currentPower > maxPct) {
+      currentPower = maxPct;
+    }
+
+    // Align each drive side
+    alignErr = fabs((lAvgTicks - rAvgTicks)) * kA; // Calculate the alignment error between the two sides
+    if(lAvgTicks > rAvgTicks) // If left is ahead of right
+    {
+      lPower = currentPower - alignErr;
+      rPower = currentPower;
+    }
+    else if(rAvgTicks > lAvgTicks) // If right is ahead of left
+    {
+      rPower = currentPower - alignErr;
+      lPower = currentPower;
+    }
+    else // If neither is ahead
+    {
+      lPower = currentPower;
+      rPower = currentPower;
+    }
+
+    // Reverse the speeds if a backwards direction is passed to the function
+    if(dir == 'b')
+    {
+      lPower = lPower * -1;
+      rPower = rPower * -1;
+    }
+
+
+    // Make the motors move
+    driveLeft(lPower);
+    driveRight(rPower);
+
+    // Update the average ticks for the next iteration
+    rAvgTicks = fabs(getAvgDriveSideDeg('r'));
+    lAvgTicks = fabs(getAvgDriveSideDeg('l'));
+    avgTicks = (rAvgTicks + lAvgTicks)/2;
+
+    // Update the PID variables
+    prevError = error; // Set the previous error to the current error before it is updated
+    accumulativeError += prevError; // Add the previous error to the accumuilative error; can't add the current error because that is current, not what it has already driven
+    error = target - avgTicks; // Update current error
+    
+    // Wait to save brain resources
+    wait(10, msec);
+  }
+  resetDrive(); // Reset the drive encoders and stop all of the motors after driving is completed
+}
+
 // Normal inch-based funcs
-void mh8_Drivetrain::driveStraight(double inches, double maxRpm, char dir) {
+void mh8_Drivetrain::o_driveStraight(double inches, double maxRpm, char dir) {
   setBrake('b');
   resetDrive();
   const int wheelDiam = 4;//Should be set to the diameter of your drive wheels in inches.
@@ -56,10 +162,10 @@ void mh8_Drivetrain::driveStraight(double inches, double maxRpm, char dir) {
   float rPower = 0;
   float distErr = 0;
   float alignErr = 0;
-  const float distKp = 0.35;//0.35;//Proportional constant used to control speed of robot.
-  const float alignKp = 0.18;//0.18;//Proportional constant used to keep robot straight.
-  const float kDecel = 3.25;//3.25;//3.45;//Constant used to determine when to decelerate.
-  const float SLEW = .035;//.003;//Constant used to control acceleration in RPM/cycle.
+  const float distKp = 0.80;//0.13;//0.35;//Proportional constant used to control speed of robot. // Proportional part of PID
+  const float alignKp = 0.23;//0.18;//Proportional constant used to keep robot straight.
+  const float kDecel = 3.05;//3.45;//Constant used to determine when to decelerate.
+  /*const*/ float SLEW = .01;//.003;//Constant used to control acceleration in RPM/cycle.
   
   while(avgTicks < target)
   {
@@ -68,8 +174,11 @@ void mh8_Drivetrain::driveStraight(double inches, double maxRpm, char dir) {
 
     avgTicks = (lAvgTicks + rAvgTicks) / 2;
 
-    printf("Degrees: %4.2d\n", avgTicks);
-    return;
+    //printf("Degrees: %4.2d\n", avgTicks);
+    //return;
+
+    if (SLEW < 0.095)
+      SLEW += 0.025;
 
     //Make sure we dont accelerate/decelerate too fast with slew.
     distErr = (target - avgTicks) * distKp;
@@ -78,13 +187,19 @@ void mh8_Drivetrain::driveStraight(double inches, double maxRpm, char dir) {
       distErr = SLEW;
     }
 
+    // Increase slew for exponential speed increase
+    if (SLEW < 0.065)
+      SLEW += 0.007;
+
     //Decide wether to accelerate or decelerate.
     if(currentPower * kDecel > (target - avgTicks))
     {
       distErr = distErr * -1;
-      if(currentPower < 5)
+      if(currentPower < 8)
       {
-        distErr = 5 - currentPower;
+        //distErr = 35 - currentPower;
+        //distErr = distErr * -1;
+        return;
       }
     }
 
@@ -128,12 +243,7 @@ void mh8_Drivetrain::driveStraight(double inches, double maxRpm, char dir) {
     if(currentPower > maxRpm)
     {
       currentPower = maxRpm;
-    }
-    else if(currentPower < 35)
-    {
-      currentPower = 35;
-    }
-    
+    }    
   }
   resetDrive();
   //return;
@@ -166,37 +276,32 @@ void mh8_Drivetrain::Turn(double deg, int maxSp, char dir) {
 
 void mh8_Drivetrain::inertialTurn(double angle, int maxTurnSp) {
   setBrake('h');
+  resetDrive();
 
   // Determine which way to turn
-  char dir; // Init value
   double currHeading = mh8Imu.heading(); // Current heading - updated every iteration
 
   double shortestAngle = fmod((angle-currHeading+540.0), 360.0)-180.0;
-  double initShortestAngle = shortestAngle;
+  double prevShortestAngle = shortestAngle;
+  double totAccumAngle = 0.0;
 
-  long escapeTime = timer::system();
+  // PID Variables
+  const double kP = 0.55;
+  const double kI = 0.0;
+  const double kD = 0.13;
 
-  if (shortestAngle < 0) { // Negative = counterclockwise (left turn)
-    dir = 'l';
-  } else if (shortestAngle > 0) { // Positive = clockwise (right turn)
-    dir = 'r'; // Make a right turn
-  } else { // Default to left turn if there is an error
-    dir = 'l';
-  }
+  double speed = 0.0;
 
-  resetDrive();
-
-  double speed = maxTurnSp; // Default speed value
-  double turnKp = 0.6; // Maximum speed multiplier based on maximum optimized turn length (180 degrees) and the current optimized turn length
-
-  while (timer::system() < escapeTime + 75) { // Exit the loop if the angle is within the margin of error and the speed is below 5 (Speed cutoff prevents overshoot)
-    speed = shortestAngle * turnKp; // Multiplies the shortest angle by 100 divided by the initial calculated shortest angle so that the drive starts at 100 and will gradually get lower as the target is neared
+  while (fabs(shortestAngle) > 0.20) { // Exit the loop if the angle is within the margin of error and the speed is below 5 (Speed cutoff prevents overshoot)
+    printf("%4f\n" , angle);
+    speed = fabs(shortestAngle) * kP + totAccumAngle * kI + (fabs(shortestAngle)-fabs(prevShortestAngle)) * kD; // Multiplies the shortest angle by 100 divided by the initial calculated shortest angle so that the drive starts at 100 and will gradually get lower as the target is neared
     
     if (speed > maxTurnSp)
       speed = maxTurnSp;
 
-    if (speed < 5)
-      speed = 5;
+    // End the loop if the angle and speed show that we are basically there so stalls dont happen
+    if (fabs(shortestAngle) > 0.80 && speed < 0.5)
+      return;
 
     if (shortestAngle < 0) { // Negative = counterclockwise (left turn)
       driveLeft(-speed);
@@ -209,21 +314,20 @@ void mh8_Drivetrain::inertialTurn(double angle, int maxTurnSp) {
     }
 
     currHeading = mh8Imu.heading(); // Current heading - updated every iteration
+
+    prevShortestAngle = shortestAngle;
     shortestAngle = fmod((angle-currHeading+540.0), 360.0)-180.0;
-
-    if (fabs(shortestAngle) > 1.0) // If the turn over/undershot
-      escapeTime = timer::system();
-
-    printf("%4f\n" , shortestAngle);
-    wait(20, msec); // Save resources
+    totAccumAngle += fabs(prevShortestAngle);
+    
+    wait(10, msec); // Save resources
   }
   resetDrive();
   return;
 }
 
 void mh8_Drivetrain::Arc(double lInches, double rInches, double lSpeed, double rSpeed, char dir) {
-  double leftTarget = (lInches / (WHEEL_SIZE * M_PI)) * 360 * 2.27; // Put calculation here to make the robot actually go the inputted inches
-  double rightTarget = (rInches / (WHEEL_SIZE * M_PI)) * 360 * 2.27; // Put calculation here to make the robot actually go the inputted inches
+  double leftTarget = (lInches / (WHEEL_SIZE * M_PI)) * 360 * 0.62; // Put calculation here to make the robot actually go the inputted inches
+  double rightTarget = (rInches / (WHEEL_SIZE * M_PI)) * 360 * 0.62; // Put calculation here to make the robot actually go the inputted inches
 
   if (dir == 'f') {
     // If going forward, do not modify the target inches
