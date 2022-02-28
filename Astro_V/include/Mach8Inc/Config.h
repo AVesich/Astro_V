@@ -24,6 +24,20 @@ namespace mh8_Variables {
   const double TURN_CONST = 1.5; // Turn constant
 
   const double FRICTION = 1; // 1 is standard, higher than 1 used for low friction, lower than 1 used for high friction
+
+  struct pid {
+    double kP;
+    double kI;
+    double kD;
+    double kA;
+
+    pid (double p, double i, double d, double a) {
+      kP = p;
+      kI = i;
+      kD = d;
+      kA = a;
+    }
+  };
 }
 
 #endif

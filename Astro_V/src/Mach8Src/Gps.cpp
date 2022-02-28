@@ -15,6 +15,9 @@ void mh8_Drivetrain::driveToCoord(double x, double y, double angle, double maxTu
   x *= 1000;
   y *= 1000;
   
+  double initX = mh8Gps.xPosition(mm);
+  double initY = mh8Gps.yPosition(mm);
+
   // Turn
   
   // Calculating turn angle
@@ -40,9 +43,14 @@ void mh8_Drivetrain::driveToCoord(double x, double y, double angle, double maxTu
     else turnAngle += 180;
   }
 
-  inertialTurn(turnAngle, 100);
+  if (angle > 0)
+    inertialTurn(angle, maxTurnSp);
+  else if (angle == -1) {
+    inertialTurn(turnAngle, maxTurnSp);
+  }
   
-  wait(200, msec);
+  resetDrive();
+  wait(500, msec);
 
   //double coords[2] = {x, y}; 
 
@@ -50,9 +58,6 @@ void mh8_Drivetrain::driveToCoord(double x, double y, double angle, double maxTu
   //wait(100, msec);
 
   // Drive to the target
-  double initX = mh8Gps.xPosition(mm);
-  double initY = mh8Gps.yPosition(mm);
-
   double delX = Delta(initX, x);
   double delY = Delta(initY, y);
 
@@ -64,7 +69,8 @@ void mh8_Drivetrain::driveToCoord(double x, double y, double angle, double maxTu
   double distMeters = distanceBetween(delX, delY)/1000; // Convert mm to m
   double distInches = distMeters*INCH_PER_M;
   Brain.Screen.clearScreen();
-  Brain.Screen.print(distInches);
+  Brain.Screen.print(mh8Gps.xPosition(mm));
+  Brain.Screen.print(initY);
 
   char driveDir;
   if (reversed)
@@ -171,7 +177,7 @@ void mh8_Drivetrain::turnWithGPS(double angle, double maxTurnSp) {
   // Declare variables
   const double kP = 0.35;
   const double kI = 0.000;
-  const double kD = 4.0;
+  const double kD = 3.7;
   /*const double kP = 0.25;//22;
   const double kI = 0.0;
   const double kD = 0.25;*/
@@ -194,7 +200,7 @@ void mh8_Drivetrain::turnWithGPS(double angle, double maxTurnSp) {
     dir = 'l';
   }
 
-  while (fabs(shortestAngle) > 0.65) {
+  while (fabs(shortestAngle) > 0.55) {
     //double maxSpeedMult = shortestAngle/180; // Maximum speed multiplier based on maximum optimized turn length (180 degrees) and the current optimized turn length
 
     speed = fabs(shortestAngle)*kP + (fabs(shortestAngle)-fabs(prevShortestAngle))*kD + degTurned*kI; //shortestAngle*((100)/initShortestAngle) * maxSpeedMult; // Multiplies the shortest angle by 100 divided by the initial calculated shortest angle so that the drive starts at 100 and will gradually get lower as the target is neared

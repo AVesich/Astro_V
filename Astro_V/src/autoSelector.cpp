@@ -1,8 +1,8 @@
 #include "vex.h"
 
 int currAuto = 0; // Index of currently selected auto
-const int MAX_INDEX = 5; // Should always be 1 lower than auto number
-const int NUM_AUTO = 6; // Number of autos
+const int MAX_INDEX = 6; // Should always be 1 lower than auto number
+const int NUM_AUTO = 7; // Number of autos
 
 // Auto names
   const char *autoNames[NUM_AUTO] = {
@@ -11,7 +11,8 @@ const int NUM_AUTO = 6; // Number of autos
     "Right",
     "Right Claw",
     "WP",
-    "Skills"
+    "Skills",
+    "Test"
   };
 
 void decAuto() {

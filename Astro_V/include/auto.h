@@ -11,6 +11,8 @@
 
   void skills();
 
+  void test();
+
   void runAuto();
 
 #endif

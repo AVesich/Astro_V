@@ -33,6 +33,10 @@ extern double liftTarget;
 extern double mogoLiftTarget;
 extern double intakeEnabled;
 
+// Pid modes
+extern struct pid currPIDMode;
+extern struct pid currTurnPIDMode;
+
 // Custom header files
 #include "drive.h"
 #include "intake.h"

@@ -30,7 +30,7 @@ namespace mh8_Drive {
 
       // Normal inch-based funcs
       void driveStraight(double inches, double maxPct, char dir);
-      void o_driveStraight(double inches, double maxRpm, char dir);
+      void o_driveStraight(double inches, double maxPct, char dir);
       void Turn(double deg, int maxSp, char dir);
       void inertialTurn(double angle, int maxTurnSp);
       void Arc(double lInches, double rInches, double lSpeed, double rSpeed, char dir);

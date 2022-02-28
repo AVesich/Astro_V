@@ -10,7 +10,7 @@ void intakeOp() {
         Lift.rotateTo(80, deg, 100, rpm);
       }
       intakeDir = directionType::fwd;
-      intakeSp = 580;//450;
+      intakeSp = 600;//450;
     } else if (Controller1.ButtonL2.pressing()) {
       if (Lift.position(deg) < 80) {
         Lift.rotateTo(80, deg, 100, rpm);
@@ -59,7 +59,7 @@ void intakeAuto(int deg, char dir, int sp) {
 
 void intakeAsync(intakeState m_intakeState) {
     if (m_intakeState == INTAKE_IN) {
-        Intake.spin(directionType::fwd, 500, velocityUnits::rpm);
+        Intake.spin(directionType::fwd, 520, velocityUnits::rpm);
     } else if (m_intakeState == INTAKE_OUT) {
         Intake.spin(directionType::rev, 300, velocityUnits::rpm);
     } else if (m_intakeState == INTAKE_OFF) {
@@ -71,7 +71,7 @@ void intakeAsync(intakeState m_intakeState) {
 int intakeSkills() {
   while (1) {
     if (Lift.rotation(deg) > 65) {
-      Intake.spin(directionType::fwd, 500, velocityUnits::rpm);
+      Intake.spin(directionType::fwd, 520, velocityUnits::rpm);
     } else {
       Intake.stop();
     }
