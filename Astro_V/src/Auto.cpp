@@ -6,6 +6,7 @@
 */
 
 // TASKS
+task posTracking;
 task liftTask;
 task mogoLiftTask;
 task intakeTask;
@@ -48,14 +49,13 @@ void leftTip() {
 }
 
 void sauce() {
-  currPIDMode = {0.5, 0.00, 0.03, 0.07};
+  currPIDMode = {1.5, 0.00, 0.06, 0.07};
   double pullTime = Brain.timer(sec);
-  m_driveTrain.driveStraight(45, 100, 'f');
+  m_driveTrain.driveStraight(39, 100, 'f');
   liftClawAuto(true);
-  wait(100, msec);
   pullTime = Brain.timer(sec)-pullTime;
   Brain.Screen.print(pullTime);
-  m_driveTrain.driveStraight(38, 90, 'b');
+  m_driveTrain.o_driveStraight(38, 90, 'b');
   
 }
 
@@ -216,7 +216,8 @@ void winPoint() {
 void skills() {
   //currPIDMode = {0.07, 0.0013, 0.85, 0.02}; // Skills pid
 
-  currTurnPIDMode = {0.23, 0.00, 0.03, 0.30 }; // Turn pid accounting for goal weight
+  //currTurnPIDMode = {0.23, 0.00, 0.03, 0.30 }; // Turn pid accounting for goal weight
+  currTurnPIDMode = {0.40, 0.00, 0.56/*0.0543*/, 0.05 }; // Turn pid accounting for goal weight
 
   // Calibrate the gps
   //mh8Gps.calibrate();
@@ -240,62 +241,111 @@ void skills() {
   m_driveTrain.o_driveStraight(24, 100, 'b');
   wait(200, msec);
   //liftTarget = 0;
-  m_driveTrain.inertialTurn(271, 80);
+  m_driveTrain.inertialTurn(267, 80);
   wait(200, msec);
-  m_driveTrain.o_driveStraight(26, 100, 'f');
+  m_driveTrain.driveStraight(21, 70, 'f');
   liftClawAuto(true);
-  m_driveTrain.o_driveStraight(2, 100, 'f');
+  liftAuto(100, 'u');
   wait(200, msec);
+  m_driveTrain.o_driveStraight(8, 60, 'f');
   //currTurnPIDMode = {0.80, 0.0017, 0.15, 0.00 }; // Turn pid accounting for goal weight
-  liftAuto(700, 'u');//liftTarget = 700;
-  m_driveTrain.inertialTurn(309, 100);
+  liftAuto(600, 'u');//liftTarget = 700;
+  currTurnPIDMode = {0.42, 0.00, 0.55/*0.0543*/, 0.05 }; // Turn pid accounting for goal weight
+  m_driveTrain.inertialTurn(311, 100);
+  currTurnPIDMode = {0.40, 0.00, 0.56/*0.0543*/, 0.05 }; // Turn pid accounting for goal weight
   wait(200, msec);
-  m_driveTrain.driveStraight(49, 100, 'f');
+  m_driveTrain.driveStraight(48, 100, 'f');
   wait(200, msec);
   m_driveTrain.inertialTurn(274.0, 100);
   wait(200, msec);
-  m_driveTrain.o_driveStraight(15, 50, 'f');
+  m_driveTrain.o_driveStraight(13, 50, 'f');
   //currTurnPIDMode = {0.7, 0.000, 0.20, 0.00 }; // Turn pid accounting for goal weight
-  liftAuto(200, 'd');//liftTarget = 500;
-  wait(200, msec);
+  liftAuto(250, 'd');//liftTarget = 500;
+  wait(500, msec);
   liftClawAuto(false);
   wait(200, msec);
-  liftAuto(100, 'u');//liftTarget = 600;
-  m_driveTrain.driveStraight(12, 100, 'b');
-  liftAuto(600, 'd');//liftTarget = 0;
-  m_driveTrain.driveStraight(6, 100, 'b');
+  liftAuto(150, 'u');//liftTarget = 600;
+  m_driveTrain.driveStraight(8, 100, 'b');
+  liftAuto(598, 'd');//liftTarget = 0;
   wait(200, msec);
-  m_driveTrain.inertialTurn(180.0, 100);
+  m_driveTrain.inertialTurn(181.0, 100);
   wait(200, msec);
   mogoAuto(false);
   m_driveTrain.driveStraight(12, 100, 'f');
   wait(200, msec);
-  m_driveTrain.inertialTurn(1.5, 100);
+  m_driveTrain.inertialTurn(0, 100);
   wait(200, msec);
-  m_driveTrain.driveStraight(25, 100, 'f');
+  m_driveTrain.driveStraight(24, 100, 'f');
   liftClawAuto(true);
-  m_driveTrain.o_driveStraight(2, 100, 'f');
+  liftAuto(100, 'u');
+  m_driveTrain.o_driveStraight(4, 100, 'f');
   wait(100, msec);
-  liftAuto(700, 'u');//liftTarget = 700;
-  wait(800, msec);
-  m_driveTrain.inertialTurn(274.0, 100);
+  liftAuto(600, 'u');//liftTarget = 700;
   wait(200, msec);
-  m_driveTrain.o_driveStraight(17, 100, 'f');
+  m_driveTrain.inertialTurn(272.0, 100);
+  wait(200, msec);
+  m_driveTrain.o_driveStraight(13, 100, 'f');
   liftAuto(200, 'd');//liftTarget = 500;
   wait(650, msec);
   liftClawAuto(false);
   wait(250, msec);
   liftAuto(100, 'u');//liftTarget = 600;
-  m_driveTrain.driveStraight(12, 100, 'b');
-  liftAuto(600, 'd');//liftTarget = 0;
-  m_driveTrain.driveStraight(6, 100, 'b');
+  m_driveTrain.o_driveStraight(2, 100, 'b');
+      currTurnPIDMode = {0.915, 0.00, 0.00/*0.0543*/, 0.05 };
+  m_driveTrain.inertialTurn(270.0, 100);
+      currTurnPIDMode = {0.40, 0.00, 0.56/*0.0543*/, 0.05 };
+  m_driveTrain.driveStraight(20, 100, 'b');
+      //liftAuto(610, 'd');//liftTarget = 0;
+      //m_driveTrain.driveStraight(10, 100, 'b');
   //currTurnPIDMode = {0.53, 0.0012, 0.50, 0.00 }; // Turn pid accounting for goal weight
   wait(200, msec);
-  m_driveTrain.inertialTurn(180.0, 100);
+  m_driveTrain.inertialTurn(37, 100);
   wait(200, msec);
-  m_driveTrain.inertialTurn(188.0, 100);
+  m_driveTrain.driveStraight(23, 60, 'f');
   wait(200, msec);
-  m_driveTrain.driveStraight(62, 100, 'f');
+  m_driveTrain.driveStraight(5, 60, 'b');
+  liftAuto(610, 'd');
+  m_driveTrain.driveStraight(11, 60, 'f');
+  liftClawAuto(true);
+  m_driveTrain.o_driveStraight(3, 100, 'f');
+  wait(200, msec);
+  liftAuto(100, 'u');
+  m_driveTrain.Turn(28, 100, 'l');
+  m_driveTrain.o_driveStraight(38.5, 100, 'b');
+  liftAuto(500, 'u');
+  wait(200, msec);
+  m_driveTrain.inertialTurn(274.0, 100);
+  wait(200, msec);
+  m_driveTrain.o_driveStraight(24, 100, 'f');
+  wait(200, msec);
+  // Drop last goal
+  liftClawAuto(false);
+  wait(200, msec);
+  m_driveTrain.driveStraight(2, 100, 'b');
+      currTurnPIDMode = {1.05, 0.00, 0.00/*0.0543*/, 0.05 };
+  m_driveTrain.inertialTurn(270.0, 100);
+      currTurnPIDMode = {0.43, 0.00, 0.575/*0.0543*/, 0.05 };
+  m_driveTrain.driveStraight(10, 100, 'b');
+  // Push Big In
+  m_driveTrain.o_driveStraight(41, 50, 'b');
+    // Quick clamp and unclamp prevents tippy so it doesnt move out of zone or hit the platform
+    mogoAuto(true);
+    wait(200, msec);
+    mogoAuto(false);
+  m_driveTrain.driveStraight(47, 100, 'f');
+
+  wait(200, msec);
+  m_driveTrain.inertialTurn(179.0, 15);
+  wait(200, msec);
+      currTurnPIDMode = {0.85, 0.00, 0.00/*0.0543*/, 0.05 };
+  m_driveTrain.inertialTurn(184.0, 70);
+      currTurnPIDMode = {0.35, 0.00, 0.56/*0.0543*/, 0.05 };
+  wait(200, msec);
+  m_driveTrain.o_driveStraight(45, 100, 'f');
+  wait(200, msec);
+  m_driveTrain.o_driveStraight(5, 60, 'b');
+  liftAuto(600, 'd');
+  m_driveTrain.o_driveStraight(12.5, 60, 'f');
   liftClawAuto(true);
   wait(200, msec);
   m_driveTrain.o_driveStraight(3, 100, 'b');
@@ -304,13 +354,17 @@ void skills() {
   //m_driveTrain.o_driveStraight(6, 100, 'b');
   wait(200, msec);
   //currTurnPIDMode = {0.7, 0.000, 0.20, 0.00 }; // Turn pid accounting for goal weight
-  m_driveTrain.inertialTurn(94.0, 80);
+  m_driveTrain.inertialTurn(96.0, 30);
   wait(200, msec);
   //currPIDMode = {0.25, 0.00, 0.00, 0.07}; // Standard straight auto pid
-  m_driveTrain.o_driveStraight(95, 100, 'f');
+  m_driveTrain.driveStraight(103, 60, 'f');
   wait(200, msec);
-  m_driveTrain.inertialTurn(6.0, 100);
+  m_driveTrain.inertialTurn(45.0, 30);
   wait(200, msec);
+  m_driveTrain.driveStraight(8, 60, 'f');
+  wait(200, msec);
+  currTurnPIDMode = {0.70, 0.00, 0.00/*0.0543*/, 0.05 };
+  m_driveTrain.inertialTurn(10.0, 30);
   liftAuto(700, 'd');//liftTarget = 0;
   m_driveTrain.autoPark();
 
@@ -424,40 +478,13 @@ void o_skills() {
 }
 
 void test() {
-  //currTurnPIDMode = {0.25, 0.0011, 0.02, 0.00 }; // Turn pid accounting for goal weight
-  //m_driveTrain.inertialTurn(180.0, 100);
-  //wait(500, msec);
+  m_driveTrain.resetPos();
 
-  m_driveTrain.driveLeftVolt(360);
-  m_driveTrain.driveRightVolt(360);
+  posTracking = task (m_driveTrain.trackPos);
+  m_driveTrain.printDebug();
 
-  //currPIDMode = {0.07, 0.0013, 0.85, 0.07}; // Skills pid
-  //m_driveTrain.driveStraight(24, 100, 'f');
-  //wait(500, msec);
-      /*liftTask = task (liftAsync); // Start lift task
-  wait(200, msec);
-  m_driveTrain.inertialTurn(180.0, 100);
-  wait(200, msec);
-  m_driveTrain.inertialTurn(182.0, 100);
-  wait(200, msec);
-  m_driveTrain.driveStraight(60, 100, 'f');
-  liftClawAuto(true);
-  wait(500, msec);
-  liftTarget = 700;
-  m_driveTrain.driveStraight(12, 100, 'b');
-  wait(500, msec);
-  currTurnPIDMode = {0.7, 0.000, 0.20, 0.00 }; // Turn pid accounting for goal weight
-  m_driveTrain.inertialTurn(90.0, 100);
-  wait(200, msec);
-  currPIDMode = {0.25, 0.00, 0.00, 0.07}; // Standard straight auto pid
-  m_driveTrain.driveStraight(93, 100, 'f');
-  wait(200, msec);
-  m_driveTrain.inertialTurn(6.0, 100);
-  wait(200, msec);
-  liftTarget = 0;
-  wait(1000, msec);
-  //m_driveTrain.autoPark();
-      liftTask.stop();*/
+  // printf("x: %4.2f", );
+  // printf("y: %4.2f", m_driveTrain.getY());
 }
 
 void runAuto() {

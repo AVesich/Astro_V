@@ -6,14 +6,43 @@ using namespace mh8_Variables;
 //mh8_Drivetrain::
 // Voltage-based
 void mh8_Drivetrain::driveLeftVolt(double vltg) {
-  L1.spin(directionType::fwd, vltg, voltageUnits::mV);
-  L2.spin(directionType::fwd, vltg, voltageUnits::mV);
-  L3.spin(directionType::fwd, vltg, voltageUnits::mV);
+  L1.spin(fwd, vltg, voltageUnits::mV);
+  L2.spin(fwd, vltg, voltageUnits::mV);
+  L3.spin(fwd, vltg, voltageUnits::mV);
 }
 void mh8_Drivetrain::driveRightVolt(double vltg) {
-  R1.spin(directionType::fwd, vltg, voltageUnits::mV);
-  R2.spin(directionType::fwd, vltg, voltageUnits::mV);
-  R3.spin(directionType::fwd, vltg, voltageUnits::mV);
+  R1.spin(fwd, vltg, voltageUnits::mV);
+  R2.spin(fwd, vltg, voltageUnits::mV);
+  R3.spin(fwd, vltg, voltageUnits::mV);
+}
+
+// Variables for constant speed voltage PID
+double speedError = 0.0;
+double currActualSpeed = 0.0;
+double prevSpeedError = 0.0;
+double accumSpeedError = 0.0;
+int counter = 0;
+
+void mh8_Drivetrain::driveVoltPID(double targetSpeed, char driveSide) {
+  const double kP = 1.5;//1.50;
+  const double kI = 0.005;
+  const double kD = 0.10;
+
+  currActualSpeed = getAvgDriveSideVelo(driveSide); // Get the current actual speed for the required drive side
+  prevSpeedError = speedError;
+  speedError = fabs(targetSpeed)-fabs(currActualSpeed); // Get the speed difference between the target and current speed
+
+  accumSpeedError += speedError;
+
+  double speed = speedError*kP + accumSpeedError*kI + (speedError-prevSpeedError)*kD; // Basic P-D calculation
+
+  if (targetSpeed < 0)
+    speed *= -1;  
+
+  switch (driveSide) {
+    case 'l': driveLeftVolt(speed*120);   break;
+    case 'r': driveRightVolt(speed*120);  break;
+  }
 }
 
 // Pct-based
@@ -28,7 +57,7 @@ void mh8_Drivetrain::driveRight(double pct) {
   R3.spin(directionType::fwd, pct, velocityUnits::pct);
 }
 
-// DriveOp
+// DriveOp modes
 void mh8_Drivetrain::tankDrive(int lStick, int rStick) {
   driveLeftVolt(lStick);
   driveRightVolt(rStick);
@@ -45,33 +74,28 @@ void mh8_Drivetrain::autoPark() {
   m_driveTrain.setBrake('h');
   resetDrive();
 
-  while (mh8Imu.roll() > -20) {
-    driveLeft(100);
-    driveRight(100);
+  while (mh8Imu.roll() > -24) { // Drive at full speed until going up the platform
+    driveLeftVolt(80*120);
+    driveRightVolt(80*120);
+    wait(10, msec); // Save resources
   }
+
+  o_driveStraight(12, 50, 'f');
   
-  o_driveStraight(31, 90, 'f');
-
-  driveLeftVolt(360);
-  driveRightVolt(360);
-
-  wait(750, msec); // Wait for the platform to balance
+  while (mh8Imu.roll() < -23.5) { // Drive with vex PID at 40% speed (120 rpm) until the platform is no longer fully tilted (begins balancing)
+    driveLeft(15);
+    driveRight(15);
+    wait(10, msec); // Save resources
+  }
 
   driveLeftVolt(0);
   driveRightVolt(0);
-
-  /*while (mh8Imu.roll() < -18) { // If the robot undershoots
-    driveStraight(1, 500, 'f');
-    wait(1000, msec); // Wait for the platform to balance
-  }*/
-
-  if (mh8Imu.roll() > 3) { // If the robot overshot
-    o_driveStraight(3, 50, 'b');
-  }
   
   resetDrive();
 }
 
+// Normal inch-based funcs
+  // Straight drive funcs
 void mh8_Drivetrain::driveStraight(double inches, double maxPct, char dir) {
   // Reset the drive and make the brake mode "brake"
   setBrake('h');
@@ -137,8 +161,8 @@ void mh8_Drivetrain::driveStraight(double inches, double maxPct, char dir) {
 
 
     // Make the motors move
-    driveLeftVolt(lPower*120);
-    driveRightVolt(rPower*120);
+    driveLeftVolt(lPower*120);//driveVoltPID(lPower, 'l');
+    driveRightVolt(rPower*120);//driveVoltPID(rPower, 'r');
 
     // Update the average ticks for the next iteration
     rAvgTicks = fabs(getAvgDriveSideDeg('r'));
@@ -156,7 +180,6 @@ void mh8_Drivetrain::driveStraight(double inches, double maxPct, char dir) {
   resetDrive(); // Reset the drive encoders and stop all of the motors after driving is completed
 }
 
-// Normal inch-based funcs
 void mh8_Drivetrain::o_driveStraight(double inches, double maxPct, char dir) {
   // Reset the drive and make the brake mode "brake"
   setBrake('b');
@@ -238,6 +261,7 @@ void mh8_Drivetrain::o_driveStraight(double inches, double maxPct, char dir) {
   resetDrive(); // Reset the drive encoders and stop all of the motors after driving is completed
 }
 
+  // Turning funcs
 void mh8_Drivetrain::Turn(double deg, int maxSp, char dir) {
   double target = deg; // Put calculation here to make the robot actually go the inputted inches
 
@@ -277,12 +301,13 @@ void mh8_Drivetrain::inertialTurn(double angle, int maxTurnSp) {
   // PID Variables
   double kP = currTurnPIDMode.kP;
 
-  //if (fabs(shortestAngle)<90) kP *= 2;
-  //if (fabs(shortestAngle)<45) kP *= 3;
+  kP *= 1 + (((180-abs(shortestAngle))/15)*0.22); // 1 + How far we start from the target/15 * .25 to get multiplier to prevent stall
+
+  //if (fabs(shortestAngle)<90) kP *= 1.3;
+  //else if (fabs(shortestAngle)<45) kP *= 1.7;
 
   const double kI = currTurnPIDMode.kI;//0.0017;
   const double kD = currTurnPIDMode.kD;//4.00;
-  const double kS = 0.75; // Slew constant - Slew is normally constant step but this is used to quickly reach the target speed
   
   const double kdecel = currTurnPIDMode.kA;
   
@@ -291,8 +316,13 @@ void mh8_Drivetrain::inertialTurn(double angle, int maxTurnSp) {
   double speed = 0.0;
 
   double STEP = 9;
-  bool acclerating = true;
   double escapeTime = Brain.timer(msec);
+
+  // Reset variables for speed controlled drive
+  currActualSpeed = 0.0;
+  speedError = 0.0;
+  prevSpeedError = 0.0;
+  accumSpeedError = 0.0;
 
   if (fabs(shortestAngle) < 1.0) { // Don't do anything if pretty much already there
     return;
@@ -300,38 +330,40 @@ void mh8_Drivetrain::inertialTurn(double angle, int maxTurnSp) {
 
   while (Brain.timer(msec) < escapeTime + 60) { // Exit the loop if the angle is within the margin of error and the speed is below 5 (Speed cutoff prevents overshoot)
     //printf("%4f\n" , angle);
-    targetSpeed = fabs(shortestAngle) * kP + totAccumAngle * kI + (fabs(shortestAngle)-fabs(prevShortestAngle)) * kD; // Multiplies the shortest angle by 100 divided by the initial calculated shortest angle so that the drive starts at 100 and will gradually get lower as the target is neared
+    targetSpeed = fabs(shortestAngle) * kP + fabs(totAccumAngle) * kI + (fabs(shortestAngle)-fabs(prevShortestAngle)) * kD; // Multiplies the shortest angle by 100 divided by the initial calculated shortest angle so that the drive starts at 100 and will gradually get lower as the target is neared
     
     if (targetSpeed > maxTurnSp)
       targetSpeed = maxTurnSp;
-    else if (targetSpeed < 4)
-      targetSpeed = 4;
+    // else if (targetSpeed < 3)
+    //    targetSpeed = 3;
 
    //if(fabs(prevShortestAngle) - fabs(shortestAngle) > 0.1)
   // speed += 0.1;
 
     // End the loop if the angle and speed show that we are basically there so stalls dont happen
-    // if (fabs(shortestAngle) < 0.80 && targetSpeed < 1) {
-    //   resetDrive();
-    //   return;
-    // }
-    
-    if (targetSpeed >= speed)
-    {
-      STEP = 9;
-    } else 
-    {
-      STEP = targetSpeed * kdecel;
+    if (fabs(shortestAngle) < 0.80 && targetSpeed < 1.0) {
+       resetDrive();
+       return;
     }
+    
+    // if (targetSpeed >= speed)
+    // {
+    //   STEP = 9;
+    // } else 
+    // {
+    //   STEP = targetSpeed * kdecel;
+    // }
 
     // Update the average speed
-    currentSpeed = (fabs(L2.velocity(percentUnits::pct)) + fabs(R2.velocity(percentUnits::pct)))/2;
+    //currentSpeed = (fabs(getAvgDriveSideVelo('l')) + fabs(getAvgDriveSideVelo('r')))/2;
 
     // Slew
-    if (targetSpeed > currentSpeed)
-      speed += STEP;
-    if (targetSpeed < currentSpeed-STEP)
-      speed -= STEP;
+    // if (targetSpeed > currentSpeed)
+    //   speed += STEP;
+    // if (targetSpeed < currentSpeed-STEP)
+    //   speed -= STEP;
+
+
     //else if (targetSpeed < currentSpeed - STEP && acclerating)
       //speed -= STEP;
     //else
@@ -346,11 +378,16 @@ void mh8_Drivetrain::inertialTurn(double angle, int maxTurnSp) {
     //   rightSpeed = targetSpeed;
 
     if (shortestAngle < 0) { // Negative = counterclockwise (left turn)
-      driveLeftVolt(-speed*120);
-      driveRightVolt(speed*120);
+      driveVoltPID(-targetSpeed, 'l');
+      driveVoltPID(targetSpeed, 'r');
+      //driveLeftVolt(-speed*120);
+      //driveRightVolt(speed*120);
     } else if (shortestAngle > 0) { // Positive = clockwise (right turn)
-      driveLeftVolt(speed*120);
-      driveRightVolt(-speed*120);
+   //printf("Speed: %4.2f\n", targetSpeed);
+      driveVoltPID(targetSpeed, 'l');
+      driveVoltPID(-targetSpeed, 'r');
+      //driveLeftVolt(speed*120);
+      //driveRightVolt(-speed*120);
     } else { // Default to not turn if there is an error
 
     }
@@ -365,7 +402,7 @@ void mh8_Drivetrain::inertialTurn(double angle, int maxTurnSp) {
 
     totAccumAngle += fabs(prevShortestAngle-shortestAngle);
     
-    if (fabs(shortestAngle) > 0.80) escapeTime = Brain.timer(msec);
+    if (fabs(shortestAngle) > 0.65) escapeTime = Brain.timer(msec);
 
     wait(10, msec); // Save resources
   }
@@ -373,6 +410,8 @@ void mh8_Drivetrain::inertialTurn(double angle, int maxTurnSp) {
   return;
 }
 
+  // Arc
+  // NOTE: (kinda odd with new bot dont use lol) ==================================================
 void mh8_Drivetrain::Arc(double lInches, double rInches, double lSpeed, double rSpeed, char dir) {
   double leftTarget = (lInches / (WHEEL_SIZE * M_PI)) * 360 * 0.62; // Put calculation here to make the robot actually go the inputted inches
   double rightTarget = (rInches / (WHEEL_SIZE * M_PI)) * 360 * 0.62; // Put calculation here to make the robot actually go the inputted inches
@@ -396,13 +435,41 @@ void mh8_Drivetrain::Arc(double lInches, double rInches, double lSpeed, double r
 }
 
 // Utility
-int mh8_Drivetrain::getAvgDriveSideDeg(char side) {
+  // Drive motor feedback
+double mh8_Drivetrain::getAvgDriveSideDeg(char side) {
   if (side == 'l') { // If returning left
     return ((L1.rotation(rotationUnits::deg) + L2.rotation(rotationUnits::deg) + L3.rotation(rotationUnits::deg))/3);
   } else { // Else, return right
     return ((R1.rotation(rotationUnits::deg) + R2.rotation(rotationUnits::deg) + R3.rotation(rotationUnits::deg))/3);
   }
 }
+
+double mh8_Drivetrain::getAvgDriveSideRev(char side) {
+  if (side == 'l') { // If returning left
+    return ((L1.position(rotationUnits::rev) + L2.position(rotationUnits::rev) + L3.position(rotationUnits::rev))/3);
+  } else { // Else, return right
+    return ((R1.position(rotationUnits::rev) + R2.position(rotationUnits::rev) + R3.position(rotationUnits::rev))/3);
+  }
+}
+
+double mh8_Drivetrain::getAvgDriveSideVelo(char side) {
+  if (side == 'l') { // If returning left
+    return ((L1.velocity(percentUnits::pct) + (-L2.velocity(percentUnits::pct)) + L3.velocity(percentUnits::pct))/3);
+  } else if (side == 'r') { // Else, return right
+    return ((-R1.velocity(percentUnits::pct)) + R2.velocity(percentUnits::pct) + (-R3.velocity(percentUnits::pct))/3);
+  } else {
+    return 0;
+  }
+}
+
+bool mh8_Drivetrain::driving() {
+  if ((L1.isSpinning() || L2.isSpinning() || L3.isSpinning()) || (R1.isSpinning() || R2.isSpinning() || R3.isSpinning()))
+    return true;
+  else
+    return false;
+}
+
+  // Drive modifiers
 void mh8_Drivetrain::resetDrive() {
   // Stop the motors
   L1.stop();
@@ -420,6 +487,7 @@ void mh8_Drivetrain::resetDrive() {
   R2.resetRotation();
   R3.resetRotation();
 }
+
 void mh8_Drivetrain::setBrake(char mode) {
   brakeType m_brakeMode;
   switch(mode){
@@ -439,11 +507,4 @@ void mh8_Drivetrain::setBrake(char mode) {
   R1.setBrake(m_brakeMode);
   R2.setBrake(m_brakeMode);
   R3.setBrake(m_brakeMode);
-}
-
-bool  mh8_Drivetrain::driving() {
-  if ((L1.isSpinning() || L2.isSpinning() || L3.isSpinning()) || (R1.isSpinning() || R2.isSpinning() || R3.isSpinning()))
-    return true;
-  else
-    return false;
 }

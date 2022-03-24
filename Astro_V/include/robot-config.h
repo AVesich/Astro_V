@@ -19,6 +19,7 @@ extern motor L3;
 extern inertial mh8Imu;
 extern digital_out mogoClamp;
 extern limit LiftBumper;
+extern encoder mh8BackTracker;
 
 /**
  * Used to initialize code/tasks/devices added using tools in VEXcode Pro.

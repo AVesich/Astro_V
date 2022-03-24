@@ -29,13 +29,6 @@ void driveOp() {
   x *= 120; // multiplies by 12, the proportion of max mvolts to max axis value
   y *= 120; // multiplies by 12, the proportion of max mvolts to max axis value
 
-  // Determine the brake mode to use
-  /*if (fabs(y) >= 80 && fabs(x) <= 25) { // If mostly going straight, use "coast"
-    m_driveTrain.mh8_setBrake('c'); // Set brake mode to coast
-  } else if (fabs(x) > 25 && fabs(y) < 80) { // If mostly going straight, use "brake"
-    m_driveTrain.mh8_setBrake('b'); // Set brake mode to brake
-  }*/
-
   if (!tryingToPark && mh8Imu.roll() < -20)
     tryingToPark = true;
 

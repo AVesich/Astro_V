@@ -6,12 +6,12 @@ const int NUM_AUTO = 7; // Number of autos
 
 // Auto names
   const char *autoNames[NUM_AUTO] = {
-    "Left", 
-    "Saucin'",
-    "Right",
-    "Right Claw",
-    "WP",
-    "Skills",
+    "Match Left", 
+    "Sauce (l w/ kickstand)",
+    "Righ + Stack",
+    "Right w/out Stack",
+    "Win Point",
+    "Skills - 160",
     "Test"
   };
 

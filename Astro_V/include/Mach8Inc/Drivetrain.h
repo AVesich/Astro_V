@@ -17,6 +17,8 @@ namespace mh8_Drive {
       // Basic control
       void driveLeftVolt(double vltg);
       void driveRightVolt(double vltg);
+      void driveVoltPID(double targetSpeed, char driveSide);
+
       void driveLeft(double pct);
       void driveRight(double pct);
 
@@ -27,6 +29,18 @@ namespace mh8_Drive {
       // Sensor-based driving
       void driveToObject(float maxPower, float curveTime, double sensitivity);
       void autoPark();
+
+          // Odom
+          static int trackPos();
+
+          void resetPos();
+          void setPos(double x, double y);
+
+          double getX();
+          double getY();
+          double getAngle();
+
+          static void printDebug();
 
       // Normal inch-based funcs
       void driveStraight(double inches, double maxPct, char dir);
@@ -44,16 +58,18 @@ namespace mh8_Drive {
       //double angleBetween(double delX, double delY);
 
       // Math
-      double Delta(double v1, double v2);
+      double static Delta(double v1, double v2);
       double distanceBetween(double delX, double delY);
       double toRadians(double angle);
       double toDegrees(double angle);
 
       // Utility
-      int getAvgDriveSideDeg(char side);
+      double getAvgDriveSideDeg(char side);
+      static double getAvgDriveSideRev(char side);
+      double getAvgDriveSideVelo(char side);
+      bool driving();
       void resetDrive();
       void setBrake(char mode);
-      bool driving();
   };
 }
 

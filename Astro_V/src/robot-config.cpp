@@ -24,6 +24,7 @@ motor L3 = motor(PORT16, ratio18_1, false);
 inertial mh8Imu = inertial(PORT7);
 digital_out mogoClamp = digital_out(Brain.ThreeWirePort.H);
 limit LiftBumper = limit(Brain.ThreeWirePort.B);
+encoder mh8BackTracker = encoder(Brain.ThreeWirePort.E);
 
 // VEXcode generated functions
 // define variable for remote controller enable/disable

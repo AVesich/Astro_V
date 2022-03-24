@@ -26,6 +26,7 @@
 // mh8Imu               inertial      7               
 // mogoClamp            digital_out   H               
 // LiftBumper           limit         B               
+// mh8BackTracker       encoder       E, F            
 // ---- END VEXCODE CONFIGURED DEVICES ----
 
 #include "vex.h"
@@ -68,6 +69,9 @@ void pre_auton(void) {
 
   // Reverse "front" of the robot when the b button is pressed
   Controller1.ButtonB.pressed(revDrive);
+
+  // Print the current odom position when up is pressed
+  Controller1.ButtonUp.pressed(m_driveTrain.printDebug);
 
   LiftBumper.pressed(resetLiftEncoders);
 

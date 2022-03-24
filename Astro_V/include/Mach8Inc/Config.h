@@ -19,11 +19,16 @@ namespace mh8_Variables {
 
   // Drivetrain variables
   const double WHEEL_SIZE = 4.00; // Robot's wheel size
-  const double GEAR_RATIO = 0.6666; // External gear ratio compensation (gear on motor/gear on wheel)
+  const double TRACKING_WHEEL_SIZE = 2.75;
+  const double GEAR_RATIO = 1.5; // External gear ratio compensation (gear on motor/gear on wheel)
 
   const double TURN_CONST = 1.5; // Turn constant
 
   const double FRICTION = 1; // 1 is standard, higher than 1 used for low friction, lower than 1 used for high friction
+
+  const double TrOffset = 6.5; // Right tracking wheel offset in inches
+  const double TlOffset = 6.5; // Left tracking wheel offset in inches
+  const double TbOffset = 1.75; // Back tracking wheel offset in inches
 
   struct pid {
     double kP;
