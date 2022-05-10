@@ -75,12 +75,12 @@ void mh8_Drivetrain::autoPark() {
   resetDrive();
 
   while (mh8Imu.roll() > -24) { // Drive at full speed until going up the platform
-    driveLeftVolt(80*120);
-    driveRightVolt(80*120);
+    driveLeftVolt(90*120);
+    driveRightVolt(90*120);
     wait(10, msec); // Save resources
   }
 
-  o_driveStraight(12, 50, 'f');
+  o_driveStraight(12, 80, 'f');
   
   while (mh8Imu.roll() < -23.5) { // Drive with vex PID at 40% speed (120 rpm) until the platform is no longer fully tilted (begins balancing)
     driveLeft(15);
@@ -90,6 +90,12 @@ void mh8_Drivetrain::autoPark() {
 
   driveLeftVolt(0);
   driveRightVolt(0);
+
+  wait(0.4, sec);
+
+  o_driveStraight(3, 50, 'b');
+
+  wait(2.0, sec);
   
   resetDrive();
 }
@@ -413,6 +419,8 @@ void mh8_Drivetrain::inertialTurn(double angle, int maxTurnSp) {
   // Arc
   // NOTE: (kinda odd with new bot dont use lol) ==================================================
 void mh8_Drivetrain::Arc(double lInches, double rInches, double lSpeed, double rSpeed, char dir) {
+  setBrake('h');
+  
   double leftTarget = (lInches / (WHEEL_SIZE * M_PI)) * 360 * 0.62; // Put calculation here to make the robot actually go the inputted inches
   double rightTarget = (rInches / (WHEEL_SIZE * M_PI)) * 360 * 0.62; // Put calculation here to make the robot actually go the inputted inches
 

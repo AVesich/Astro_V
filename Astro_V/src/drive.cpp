@@ -38,5 +38,7 @@ void driveOp() {
     m_driveTrain.setBrake('c');
 
   // Make the drivetrain move
-  m_driveTrain.arcadeDrive(x, y);
+  //m_driveTrain.arcadeDrive(x, y);
+  m_driveTrain.driveLeft(Controller1.Axis3.value());
+  m_driveTrain.driveRight(Controller1.Axis2.value());
 }

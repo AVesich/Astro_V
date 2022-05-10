@@ -10,7 +10,7 @@ void intakeOp() {
         Lift.rotateTo(80, deg, 100, rpm);
       }
       intakeDir = directionType::fwd;
-      intakeSp = 450;
+      intakeSp = 400;
     } else if (Controller1.ButtonL2.pressing()) {
       if (Lift.position(deg) < 80) {
         Lift.rotateTo(80, deg, 100, rpm);

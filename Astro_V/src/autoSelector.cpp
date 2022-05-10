@@ -8,10 +8,10 @@ const int NUM_AUTO = 7; // Number of autos
   const char *autoNames[NUM_AUTO] = {
     "Match Left", 
     "Sauce (l w/ kickstand)",
-    "Righ + Stack",
+    "Right + Stack",
     "Right w/out Stack",
     "Win Point",
-    "Skills - 160",
+    "Skills - 210",
     "Test"
   };
 
